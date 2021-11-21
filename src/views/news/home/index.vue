@@ -5,28 +5,30 @@
 */
 <template>
   <div class="index">
-    <div v-for="(item,index) in list" :key="index" class="item" :class="{single:index%2===1}">
+    <div v-for="r in resultList" :key="r.url" class="item" :class="{single:index%2===1}">
       <div class="left-message" style="">
         <div class="title">
-          解放路的撒发了司机问问号欧派接口了sad富家大发了多少富家大室了富家大室了附近商店弗利萨飞机啊是伐啦司法局哎说多了室了放假啊嗯嗯覅喷雾剂为将诶欧金融公司了给你看顺丰快递飞机来是否距离洒咖啡机撒啊李逵负荆爱迪生弗兰克斯
+          {{r.abstract}}
         </div>
         <div style="margin-top: 10px;display: flex">
           <i class="el-icon-collection" />
-          <span style="color: #2EC13C;padding-left: 10px">亚洲狮子问题讨论</span>
-          <el-link style="margin-left: 40px;">查看原文 <i class="el-icon-view" />
+          <span style="color: #2EC13C;padding-left: 10px">{{r.title}}</span>
+          <el-link style="margin-left: 40px;" :href="r.url">查看原文 <i class="el-icon-view" />
           </el-link>
           <div style="flex: 1;" />
-          <div style="margin-right: 20px">张三</div>
-          <div style="margin-right: 20px">2021-12-22 10:15:22</div>
+          <div style="margin-right: 20px">{{r.author}}</div>
+          <div style="margin-right: 20px">{{r.date}}</div>
         </div>
       </div>
       <div style="flex: 1;padding: 10px">
-        <div class="title">
-          发大水发撒范德萨发送到
+        <div v-for="k in r.keyword" :key="k" >
+          <div class="title">
+            {{k}}
+          </div>
         </div>
         <div style="margin-top: 10px">
           <i class="el-icon-warning"/>
-          棉花方面
+          今天预测低走
         </div>
       </div>
     </div>
@@ -34,20 +36,68 @@
 </template>
 
 <script type="text/ecmascript-6">
+import axios from "axios";
+
 export default {
   name: 'Index',
-  data() {
-    return {
-      list: 10
+  data: () => ({
+    resultList: [],
+    // return {
+    //   list: 10
+    // }
+    currentPage: 1,
+    totalPages: 0,
+    PageSize: 4
+  }),
+  computed: {
+     resultCount () {
+      return this.resultList.length
+    },
+    empty () {
+      return this.totalPages
+    },
+    pages () {
+      const c = this.currentPage
+      const t = this.totalPages
+      if (t <= 10) {
+        return Array.from({length: t}, (item, index) => index + 1)
+      } else {
+        if (c <= 5) {
+          return [1, 2, 3, 4, 5, 6, 7, 8, 9, '...', t]
+        } else if (c >= t - 4) {
+          return [1, '...', t - 8, t - 7, t - 6, t - 5, t - 4, t - 3, t - 2, t - 1, t]
+        } else {
+          return [1, '...', c - 3, c - 2, c - 1, c, c + 1, c + 2, c + 3, '...', t]
+        }
+      }
     }
   },
-  computed: {},
   created() {
-    this.loadData()
+    this.index(this.currentPage, this.PageSize)
   },
   methods: {
-    loadData() {
-
+    index (PageId, PageSize) {
+      axios.get(this.GLOBAL.BASE_URL + '/home/', {
+        params: {page_id: PageId, page_size: PageSize}
+      }).then(response => {
+        this.resultList = response.data.docs
+        this.totalPages = response.data.totalPages
+      })
+    },
+    selectPage (item) {
+      if (item === this.currentPage) return
+      if (typeof item === 'string') return
+      this.currentPage = item
+      this.index(this.currentPage, this.PageSize)
+    },
+    prevOrNext (n) {
+      this.currentPage += n
+      if (this.currentPage < 1) {
+        this.currentPage = 1
+      } else if (this.currentPage > this.totalPages) {
+        this.currentPage = this.totalPages
+      }
+      this.index(this.currentPage, this.PageSize)
     }
   }
 }
